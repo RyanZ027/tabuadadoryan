@@ -2,27 +2,65 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Jogo de Tabuada</title>
+    <title>Jogo de Tabuada Avançado</title>
     <link rel="stylesheet" href="style.css">
-    </head>
+</head>
 <body>
     <header>
-        <h1>🎮 Jogo da Tabuada</h1>
+        <h1>🧠 Desafio Matemático</h1>
     </header>
 
     <main>
         <div class="game-container"> 
             <p id="welcome-message" style="color: var(--accent-color); font-weight: 600;">Carregando...</p>
-
+            
             <div id="config">
-                <p>Escolha o tempo do desafio:</p>
-                <select id="tempoSelecionado">
-                    <option value="30">30 segundos</option>
-                    <option value="60" selected>60 segundos</option>
-                    <option value="120">120 segundos</option>
-                </select>
-                <br>
-                <button onclick="iniciarJogo()">Iniciar Jogo</button>
+                <h2>Configurações do Desafio</h2>
+                
+                <div class="config-section">
+                    <label for="nivelSelecionado">Nível:</label>
+                    <select id="nivelSelecionado">
+                        <option value="facil" selected>Fácil (Tabuada Aleatória)</option>
+                        <option value="medio">Médio (Tabuada Específica)</option>
+                        <option value="dificil">Difícil (Expressões Mistas)</option>
+                    </select>
+                </div>
+
+                <div class="config-section" id="tabuadaEspec">
+                    <label for="fatorSelecionado">Tabuada de:</label>
+                    <select id="fatorSelecionado">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                    </select>
+                </div>
+
+                <div class="config-section" id="operacaoSel">
+                    <label for="operacaoSelecionada">Operação Principal:</label>
+                    <select id="operacaoSelecionada">
+                        <option value="*">Multiplicação (×)</option>
+                        <option value="/">Divisão (÷)</option>
+                        <option value="+">Adição (+)</option>
+                        <option value="-">Subtração (-)</option>
+                    </select>
+                </div>
+
+                <div class="config-section">
+                    <label for="tempoSelecionado">Tempo Total:</label>
+                    <select id="tempoSelecionado">
+                        <option value="30">30 segundos</option>
+                        <option value="60" selected>60 segundos</option>
+                        <option value="120">120 segundos</option>
+                    </select>
+                </div>
+                
+                <button onclick="iniciarJogo()" style="margin-top: 20px;">Iniciar Desafio</button>
             </div>
 
             <div id="jogo" style="display:none;">
@@ -33,53 +71,178 @@
                 <button onclick="verificar()" id="btnResponder">Responder</button>
                 <p id="mensagem"></p>
                 <p style="font-size: 18px;">Pontuação: <span id="pontos">0</span></p>
+                <p style="font-size: 14px;">Acertos para o bônus: <span id="bonusCounter">10</span></p>
 
                 <div id="graficoFinal">
                     <h2>📊 Resultado Final</h2>
                     <canvas id="meuGrafico"></canvas>
-                    <button onclick="reiniciarPontos()" style="margin-top: 15px;">Novo Jogo (Mesmo Tempo)</button>
-                    <button onclick="window.location.reload()" style="background: var(--secondary-color);">Mudar Tempo</button>
+                    <button onclick="reiniciarPontos()" style="margin-top: 15px;">Novo Jogo (Mesma Config)</button>
+                    <button onclick="window.location.reload()" style="background: var(--secondary-color);">Mudar Configurações</button>
                 </div>
             </div>
             
-            <button onclick="handleLogout()" class="btn-logout">Sair da Conta</button>
+            <div id="historicoSection" style="display:none; text-align: left;">
+                <h2>📜 Histórico de Partidas</h2>
+                <ul id="historicoList"></ul>
+                <button onclick="hideHistorico()" style="background: var(--secondary-color);">Voltar</button>
+            </div>
+
+            <div class="bottom-buttons">
+                <button onclick="showHistorico()" style="background-color: #00bcd4;">Ver Histórico</button>
+                <button onclick="handleLogout()" class="btn-logout">Sair da Conta</button>
+            </div>
         </div>
     </main>
 
     <footer>
-        <p>Desenvolvido por RyanZ © 2025</p>
+        <p>Desenvolvido por Você © 2025</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        let numero1, numero2, pontos=0, erros=0, tempo, intervalo, meuGrafico;
+        let pontos = 0, erros = 0, tempo, intervalo, meuGrafico;
+        let nivel, operacao, fator, acertosParaBonus = 10, pontosNaPartida = 0;
+        let perguntaAtual, respostaCorretaAtual;
 
-        // Função de Logout
+        // --- Funções de Utilitário e Histórico ---
         function handleLogout() {
             localStorage.removeItem('currentUser');
             window.location.href = "index.html";
         }
         
-        // Validação de Login ao carregar e exibição do nome do usuário
-        window.onload = function() {
-            const currentUser = localStorage.getItem('currentUser');
-            if (!currentUser) {
-                window.location.href = "index.html"; 
-            } else {
-                document.getElementById('welcome-message').innerText = `Bem-vindo(a), ${currentUser}! Prepare-se!`;
-            }
-        };
+        function getHistorico() {
+            const user = localStorage.getItem('currentUser');
+            return JSON.parse(localStorage.getItem(`historico_${user}`)) || [];
+        }
 
-        // Lógica do Jogo
+        function salvarPartida(pontos, erros, tempoTotal, nivel, operacao, fator) {
+            const historico = getHistorico();
+            const data = new Date().toLocaleDateString('pt-BR');
+            const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            
+            let configDetalhe = "";
+            if (nivel === 'facil') configDetalhe = "Tabuada Aleatória";
+            if (nivel === 'medio') configDetalhe = `Tabuada de ${fator}`;
+            if (nivel === 'dificil') configDetalhe = `Expressão (${operacao})`;
+
+            historico.unshift({ // Adiciona no início
+                data: `${data} às ${hora}`,
+                resultado: `${pontos} Acertos / ${erros} Erros`,
+                config: `${configDetalhe}`,
+                tempo: `${tempoTotal}s`
+            });
+            
+            // Mantém apenas as 10 últimas partidas para não sobrecarregar
+            localStorage.setItem(`historico_${localStorage.getItem('currentUser')}`, JSON.stringify(historico.slice(0, 10)));
+        }
+        
+        function showHistorico() {
+            const list = document.getElementById('historicoList');
+            const historico = getHistorico();
+            list.innerHTML = ""; // Limpa a lista
+
+            if (historico.length === 0) {
+                list.innerHTML = "<li style='color: gray; list-style: none;'>Nenhuma partida registrada ainda.</li>";
+            } else {
+                historico.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<strong>${item.data}</strong>: ${item.resultado} | Nível: ${item.config} | Duração: ${item.tempo}`;
+                    li.style.marginBottom = '8px';
+                    li.style.borderBottom = '1px dotted rgba(255, 255, 255, 0.1)';
+                    li.style.paddingBottom = '5px';
+                    li.style.listStyleType = 'none';
+                    list.appendChild(li);
+                });
+            }
+
+            document.getElementById('config').style.display = 'none';
+            document.getElementById('jogo').style.display = 'none';
+            document.getElementById('historicoSection').style.display = 'block';
+            document.querySelector('.bottom-buttons').style.display = 'block';
+            document.getElementById('welcome-message').style.display = 'none';
+        }
+
+        function hideHistorico() {
+            document.getElementById('historicoSection').style.display = 'none';
+            document.getElementById('config').style.display = 'block';
+        }
+
+        // --- Lógica de Geração de Perguntas ---
+        function gerarPerguntas(n) {
+            return Math.floor(Math.random() * n) + 1;
+        }
+
+        function gerarExpressao() {
+            let num1 = gerarPerguntas(10);
+            let num2 = gerarPerguntas(10);
+            let num3 = gerarPerguntas(5);
+            const ops = ['+', '-', '*', '/'];
+            const op1 = ops[Math.floor(Math.random() * 4)];
+            const op2 = ops[Math.floor(Math.random() * 4)];
+            
+            // Simplificando a expressão para garantir que a divisão seja exata e a resposta positiva
+            if (op1 === '/' || op2 === '/') {
+                 // Garante que a primeira operação (a mais complexa) seja simples
+                 num1 = gerarPerguntas(9) * gerarPerguntas(9);
+                 num2 = Math.floor(Math.random() * 9) + 1;
+                 while (num1 % num2 !== 0) {
+                     num1 = gerarPerguntas(9) * gerarPerguntas(9);
+                     num2 = Math.floor(Math.random() * 9) + 1;
+                 }
+            }
+            
+            let expressao = `(${num1} ${op1} ${num2}) ${op2} ${num3}`;
+            let resultado;
+            
+            // Usa 'eval' com cautela, mas é a forma mais simples para esta demonstração
+            try {
+                // A expressão é avaliada por ordem de precedência (Multiplicação/Divisão primeiro)
+                // Usando Math.round para evitar dízimas no caso de divisões controladas
+                resultado = Math.round(eval(expressao.replace('×', '*').replace('÷', '/'))); 
+                
+                if (resultado < 0 || resultado > 100) return gerarExpressao(); // Tenta novamente se for muito grande ou negativo
+                if (op1 === '/' && op2 === '/' && (num1 / num2) % 1 !== 0) return gerarExpressao();
+
+            } catch(e) {
+                return gerarExpressao();
+            }
+            
+            // Formata para exibição
+            expressao = expressao.replace('*', '×').replace('/', '÷');
+            return { pergunta: expressao, resposta: resultado };
+        }
+
         function novaPergunta() {
-            numero1 = Math.floor(Math.random() * 10) + 1;
-            numero2 = Math.floor(Math.random() * 10) + 1;
-            document.getElementById("pergunta").innerText = `Quanto é ${numero1} × ${numero2}?`;
+            let num1, num2;
+            let pergunta, respostaCorreta;
+
+            if (nivel === 'facil') {
+                num1 = gerarPerguntas(10);
+                num2 = gerarPerguntas(10);
+                pergunta = `Quanto é ${num1} × ${num2}?`;
+                respostaCorreta = num1 * num2;
+            } else if (nivel === 'medio') {
+                num1 = parseInt(fator);
+                num2 = gerarPerguntas(10);
+                pergunta = `Quanto é ${num1} × ${num2}?`;
+                respostaCorreta = num1 * num2;
+            } else { // dificil (Expressões Mistas)
+                const expressao = gerarExpressao();
+                pergunta = `Quanto é ${expressao.pergunta}?`;
+                respostaCorreta = expressao.resposta;
+            }
+
+            perguntaAtual = pergunta;
+            respostaCorretaAtual = respostaCorreta;
+
+            document.getElementById("pergunta").innerText = pergunta;
             document.getElementById("resposta").value = "";
             document.getElementById("resposta").disabled = false;
             document.getElementById("btnResponder").disabled = false;
             document.getElementById("resposta").focus();
         }
+
+        // --- Lógica do Jogo ---
 
         function verificar() {
             const respostaInput = document.getElementById("resposta");
@@ -92,24 +255,36 @@
                 return;
             }
             
-            // Desabilita o input e botão rapidamente para evitar respostas múltiplas
             respostaInput.disabled = true;
             document.getElementById("btnResponder").disabled = true;
 
-
-            if(resposta === numero1*numero2){
+            if(resposta === respostaCorretaAtual){
                 pontos++;
-                mensagem.style.color="var(--success-color)";
-                mensagem.innerText="✅ Acertou!";
+                pontosNaPartida++;
+                acertosParaBonus--;
+
+                // Bônus de Tempo!
+                if (acertosParaBonus <= 0) {
+                    tempo += 30;
+                    document.getElementById("timer").innerText=`⏳ Tempo: ${tempo}s (BÔNUS!)`;
+                    acertosParaBonus = 10;
+                    mensagem.innerText="✅ Acertou! (+30s de BÔNUS!)";
+                    mensagem.style.color="#00bcd4"; // Cor do Ciano
+                } else {
+                    mensagem.style.color="var(--success-color)";
+                    mensagem.innerText="✅ Acertou!";
+                }
+
             } else {
                 erros++;
                 mensagem.style.color="var(--error-color)";
-                mensagem.innerText=`❌ Errou! A resposta correta era ${numero1*numero2}`;
+                mensagem.innerText=`❌ Errou! A resposta correta era ${respostaCorretaAtual}`;
             }
-            document.getElementById("pontos").innerText=pontos;
             
-            // Próxima pergunta após a leitura da resposta
-            setTimeout(novaPergunta, 800); 
+            document.getElementById("pontos").innerText=pontos;
+            document.getElementById("bonusCounter").innerText=acertosParaBonus;
+            
+            setTimeout(novaPergunta, 1000); 
         }
 
         function iniciarTimer() {
@@ -124,23 +299,36 @@
         }
 
         function iniciarJogo(){
+            nivel = document.getElementById("nivelSelecionado").value;
+            fator = document.getElementById("fatorSelecionado").value;
+            operacao = document.getElementById("operacaoSelecionada").value;
             tempo = parseInt(document.getElementById("tempoSelecionado").value);
+            pontosNaPartida = 0; // Reseta o contador para o bônus
+
             document.getElementById("config").style.display="none";
             document.getElementById("jogo").style.display="block";
             document.getElementById("welcome-message").style.display="none"; 
             document.getElementById("timer").innerText=`⏳ Tempo: ${tempo}s`;
+            document.querySelector('.bottom-buttons').style.display = 'none'; // Esconde histórico/sair
+            
+            // Prepara a interface
+            pontos = 0; erros = 0; acertosParaBonus = 10;
+            document.getElementById("pontos").innerText = pontos;
+            document.getElementById("bonusCounter").innerText = acertosParaBonus;
+            document.getElementById("mensagem").innerText = "";
+            document.getElementById("graficoFinal").style.display = "none";
+            
             novaPergunta();
             iniciarTimer();
         }
         
         function reiniciarPontos() {
-             pontos = 0;
-             erros = 0;
+             // Mantém o nível, fator e tempo selecionados
+             pontos = 0; erros = 0; pontosNaPartida = 0; acertosParaBonus = 10;
              document.getElementById("pontos").innerText = "0";
+             document.getElementById("bonusCounter").innerText = "10";
              document.getElementById("graficoFinal").style.display = "none";
              document.getElementById("jogo").style.display = "block";
-             document.getElementById("resposta").disabled = false;
-             document.getElementById("btnResponder").disabled = false;
              document.getElementById("mensagem").innerText = "";
              if (meuGrafico) meuGrafico.destroy();
              iniciarJogo();
@@ -153,49 +341,46 @@
             document.getElementById("graficoFinal").style.display="block";
             document.getElementById("mensagem").innerText=`🎉 Resultado: ${pontos} Acertos e ${erros} Erros.`;
             document.getElementById("mensagem").style.color="var(--accent-color)";
+            document.querySelector('.bottom-buttons').style.display = 'flex'; // Volta a mostrar
+            
+            // Salva no histórico antes de mostrar o gráfico
+            const tempoInicial = parseInt(document.getElementById("tempoSelecionado").value);
+            salvarPartida(pontos, erros, tempoInicial, nivel, operacao, fator);
 
             const ctx=document.getElementById("meuGrafico").getContext("2d");
             
-            if (meuGrafico) {
-                meuGrafico.destroy();
-            }
+            if (meuGrafico) meuGrafico.destroy();
 
             meuGrafico = new Chart(ctx,{
                 type:"bar",
-                data:{ 
-                    labels:["Acertos","Erros"], 
-                    datasets:[{
-                        label:"Resultado do Jogo", 
-                        data:[pontos,erros], 
-                        backgroundColor:["var(--success-color)","#f44336"], // Usa a variável do CSS
-                        borderRadius: 5
-                    }] 
-                },
-                options:{ 
-                    responsive:true, 
-                    plugins:{
-                        legend:{display:false},
-                        tooltip: {
-                             backgroundColor: 'rgba(0,0,0,0.8)',
-                             titleFont: { size: 16 },
-                             bodyFont: { size: 14 }
-                        }
-                    }, 
-                    scales:{
-                        y:{
-                            beginAtZero:true,
-                            ticks:{stepSize:1, color: 'white'},
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                        },
-                        x:{
-                            ticks:{ color: 'white'},
-                            grid: { display: false }
-                        }
-                    } 
-                }
+                data:{ labels:["Acertos","Erros"], datasets:[{label:"Resultado do Jogo", data:[pontos,erros], backgroundColor:["var(--success-color)","#f44336"], borderRadius: 5}] },
+                options:{ responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,ticks:{stepSize:1, color: 'white'},grid: { color: 'rgba(255, 255, 255, 0.1)' }},x:{ticks:{ color: 'white'},grid: { display: false }}} }
             });
         }
+        
+        // --- UX Inicial ---
+        window.onload = function() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = "index.html"; 
+            } else {
+                document.getElementById('welcome-message').innerText = `Bem-vindo(a), ${currentUser}! Configure seu desafio.`;
+            }
+            // Chama a função para ocultar/mostrar opções ao mudar o nível
+            document.getElementById('nivelSelecionado').addEventListener('change', toggleConfig);
+            toggleConfig();
+        };
+
+        function toggleConfig() {
+            const nivel = document.getElementById('nivelSelecionado').value;
+            
+            // Médio: Mostra a escolha da tabuada (fator)
+            document.getElementById('tabuadaEspec').style.display = (nivel === 'medio') ? 'block' : 'none';
+            
+            // Difícil: Mostra a escolha da operação (e esconde o fator)
+            document.getElementById('operacaoSel').style.display = (nivel === 'dificil') ? 'block' : 'none';
+        }
+
     </script>
 </body>
-
 </html>
