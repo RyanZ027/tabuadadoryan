@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso à Plataforma de Tabuada</title>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+    <main>
+        <div class="container">
+            <div id="logged-out-section">
+                <h1>Acesse o Jogo da Tabuada</h1>
+                <button onclick="showRegister()">Cadastrar-se</button>
+                <button onclick="showLogin()">Fazer Login</button>
+            </div>
+
+            <div id="register-section" style="display:none;">
+                <h1>Novo Cadastro</h1>
+                <input type="text" id="reg-username" placeholder="Nome de Usuário" required>
+                <input type="password" id="reg-password" placeholder="Senha" required>
+                <div id="reg-validation-message" class="error" style="display:none; text-align: left;"></div>
+                <button onclick="handleRegister()">Registrar</button>
+                <button onclick="showLoggedOut()" style="background: var(--secondary-color);">Voltar</button>
+            </div>
+
+            <div id="login-section" style="display:none;">
+                <h1>Login de Usuário</h1>
+                <input type="text" id="log-username" placeholder="Nome de Usuário" required>
+                <input type="password" id="log-password" placeholder="Senha" required>
+                <div id="log-validation-message" class="error" style="display:none;"></div>
+                <button onclick="handleLogin()">Entrar</button>
+                <button onclick="showLoggedOut()" style="background: var(--secondary-color);">Voltar</button>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>Desenvolvido por Você © 2025</p>
+    </footer>
+
+    <script>
+        // Funções para alternar as telas (sem mudanças na lógica)
+        function showRegister() {
+            document.getElementById('logged-out-section').style.display = 'none';
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('register-section').style.display = 'block';
+        }
+
+        function showLogin() {
+            document.getElementById('logged-out-section').style.display = 'none';
+            document.getElementById('register-section').style.display = 'none';
+            document.getElementById('login-section').style.display = 'block';
+        }
+
+        function showLoggedOut() {
+            document.getElementById('register-section').style.display = 'none';
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('logged-out-section').style.display = 'block';
+        }
+
+        // FUNÇÃO DE VALIDAÇÃO DE SEGURANÇA DA SENHA (Sem mudanças)
+        function validarSenha(senha) {
+            const minLength = 6;
+            const hasLower = /[a-z]/.test(senha);
+            const hasUpper = /[A-Z]/.test(senha);
+            const hasSpecial = /[^a-zA-Z0-9]/.test(senha);
+
+            let erros = [];
+
+            if (senha.length < minLength) {
+                erros.push('• Mínimo de 6 caracteres.');
+            }
+            if (!hasLower) {
+                erros.push('• Pelo menos uma letra minúscula.');
+            }
+            if (!hasUpper) {
+                erros.push('• Pelo menos uma letra maiúscula.');
+            }
+            if (!hasSpecial) {
+                erros.push('• Pelo menos um caractere especial.');
+            }
+            
+            return erros;
+        }
+
+        // Função de Registro (Sem mudanças na lógica)
+        function handleRegister() {
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const msgBox = document.getElementById('reg-validation-message');
+            
+            const erros = validarSenha(password);
+
+            if (erros.length > 0) {
+                msgBox.innerHTML = '<strong>A senha precisa ter:</strong><br>' + erros.join('<br>');
+                msgBox.classList.remove('success');
+                msgBox.classList.add('error');
+                msgBox.style.display = 'block';
+                return;
+            }
+
+            const storedUsers = JSON.parse(localStorage.getItem('plataformaUsers')) || {};
+            if (storedUsers[username]) {
+                msgBox.innerHTML = '<strong>Erro:</strong> Nome de usuário já existe.';
+                msgBox.classList.remove('success');
+                msgBox.classList.add('error');
+                msgBox.style.display = 'block';
+                return;
+            }
+
+            // Armazena a senha (INSEGURO para produção, mas funcional para demonstração)
+            storedUsers[username] = password; 
+            localStorage.setItem('plataformaUsers', JSON.stringify(storedUsers));
+
+            msgBox.innerHTML = 'Registro realizado com sucesso! Faça login.';
+            msgBox.classList.remove('error');
+            msgBox.classList.add('success');
+            msgBox.style.display = 'block';
+            
+            setTimeout(showLogin, 2000);
+        }
+
+        // Função de Login (Sem mudanças na lógica)
+        function handleLogin() {
+            const username = document.getElementById('log-username').value.trim();
+            const password = document.getElementById('log-password').value;
+            const msgBox = document.getElementById('log-validation-message');
+            
+            const storedUsers = JSON.parse(localStorage.getItem('plataformaUsers')) || {};
+
+            if (storedUsers[username] && storedUsers[username] === password) {
+                localStorage.setItem('currentUser', username);
+                window.location.href = "jogo.html"; 
+            } else {
+                msgBox.innerHTML = 'Nome de usuário ou senha incorretos.';
+                msgBox.classList.add('error');
+                msgBox.style.display = 'block';
+            }
+        }
+
+        // Verifica o estado inicial ao carregar a página (Sem mudanças)
+        window.onload = function() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                window.location.href = "jogo.html";
+            } else {
+                showLoggedOut();
+            }
+        };
+
+    </script>
+</body>
+</html>

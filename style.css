@@ -1,0 +1,180 @@
+/* Importação de fonte moderna */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+:root {
+    --primary-color: #1a2c5b; /* Azul Escuro */
+    --secondary-color: #2c4a92; /* Azul Médio */
+    --accent-color: #00bcd4; /* Azul Ciano Vibrante */
+    --success-color: #4CAF50;
+    --error-color: #f44336;
+    --text-color: #ffffff;
+    --card-bg: rgba(255, 255, 255, 0.05); /* Fundo sutilmente transparente */
+    --shadow-light: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+header, footer {
+    background: rgba(0,0,0,0.5);
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+    z-index: 10;
+}
+
+main {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Container principal para Login/Jogo */
+.container, .game-container {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px); /* Efeito de vidro desfocado */
+    padding: 30px;
+    border-radius: 18px; /* Mais arredondado */
+    width: 100%;
+    max-width: 450px; /* Pouco mais largo */
+    text-align: center;
+    box-shadow: var(--shadow-light);
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Borda sutil */
+}
+
+h1 {
+    font-weight: 600;
+    color: var(--accent-color);
+    margin-bottom: 25px;
+}
+
+input, select {
+    width: calc(100% - 20px);
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--primary-color);
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+    box-shadow: 0 0 0 3px var(--accent-color);
+    outline: none;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin: 15px 0 5px;
+    border-radius: 10px;
+    border: none;
+    background: var(--success-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+}
+
+button:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Estilos de mensagens de feedback (index.html) */
+.success {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+.error {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: var(--error-color);
+    border: 1px solid var(--error-color);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+/* Estilos específicos para o Jogo */
+#timer { 
+    font-size: 24px; 
+    font-weight: 700; 
+    color: var(--accent-color); 
+    margin-bottom: 20px; 
+}
+#pergunta {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 20px 0;
+}
+#resposta {
+    font-size: 24px;
+    text-align: center;
+    font-weight: 600;
+    width: 60%; /* Campo de resposta menor */
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+#pontos {
+    font-weight: 700;
+    color: var(--success-color);
+}
+#mensagem {
+    font-size: 16px;
+    font-weight: 600;
+    padding: 10px 0;
+    min-height: 40px; /* Evita que a interface "pule" */
+}
+#btnResponder {
+    margin-top: 10px;
+}
+#graficoFinal {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Botão Sair/Logout específico */
+.btn-logout {
+    background-color: var(--error-color) !important;
+    margin-top: 20px !important;
+}
+.btn-logout:hover {
+    background-color: #d32f2f !important;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+    .container, .game-container {
+        padding: 20px;
+        max-width: 95%;
+    }
+    #pergunta {
+        font-size: 26px;
+    }
+    #resposta {
+        width: 80%;
+    }
+}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Jogo de Tabuada</title>
+    <link rel="stylesheet" href="style.css">
+    </head>
+<body>
+    <header>
+        <h1>🎮 Jogo da Tabuada</h1>
+    </header>
+
+    <main>
+        <div class="game-container"> 
+            <p id="welcome-message" style="color: var(--accent-color); font-weight: 600;">Carregando...</p>
+
+            <div id="config">
+                <p>Escolha o tempo do desafio:</p>
+                <select id="tempoSelecionado">
+                    <option value="30">30 segundos</option>
+                    <option value="60" selected>60 segundos</option>
+                    <option value="120">120 segundos</option>
+                </select>
+                <br>
+                <button onclick="iniciarJogo()">Iniciar Jogo</button>
+            </div>
+
+            <div id="jogo" style="display:none;">
+                <p id="timer">⏳ Tempo: 60s</p>
+                <p id="pergunta">Carregando pergunta...</p>
+                <input type="number" id="resposta" placeholder="Sua resposta" onkeyup="if(event.key === 'Enter') verificar()">
+                <br>
+                <button onclick="verificar()" id="btnResponder">Responder</button>
+                <p id="mensagem"></p>
+                <p style="font-size: 18px;">Pontuação: <span id="pontos">0</span></p>
+
+                <div id="graficoFinal">
+                    <h2>📊 Resultado Final</h2>
+                    <canvas id="meuGrafico"></canvas>
+                    <button onclick="reiniciarPontos()" style="margin-top: 15px;">Novo Jogo (Mesmo Tempo)</button>
+                    <button onclick="window.location.reload()" style="background: var(--secondary-color);">Mudar Tempo</button>
+                </div>
+            </div>
+            
+            <button onclick="handleLogout()" class="btn-logout">Sair da Conta</button>
+        </div>
+    </main>
+
+    <footer>
+        <p>Desenvolvido por Você © 2025</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let numero1, numero2, pontos=0, erros=0, tempo, intervalo, meuGrafico;
+
+        // Função de Logout
+        function handleLogout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = "index.html";
+        }
+        
+        // Validação de Login ao carregar e exibição do nome do usuário
+        window.onload = function() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (!currentUser) {
+                window.location.href = "index.html"; 
+            } else {
+                document.getElementById('welcome-message').innerText = `Bem-vindo(a), ${currentUser}! Prepare-se!`;
+            }
+        };
+
+        // Lógica do Jogo
+        function novaPergunta() {
+            numero1 = Math.floor(Math.random() * 10) + 1;
+            numero2 = Math.floor(Math.random() * 10) + 1;
+            document.getElementById("pergunta").innerText = `Quanto é ${numero1} × ${numero2}?`;
+            document.getElementById("resposta").value = "";
+            document.getElementById("resposta").disabled = false;
+            document.getElementById("btnResponder").disabled = false;
+            document.getElementById("resposta").focus();
+        }
+
+        function verificar() {
+            const respostaInput = document.getElementById("resposta");
+            const resposta = parseInt(respostaInput.value);
+            const mensagem = document.getElementById("mensagem");
+
+            if(isNaN(resposta) || respostaInput.value.trim() === "") {
+                mensagem.style.color="orange";
+                mensagem.innerText="⚠️ Por favor, digite sua resposta!";
+                return;
+            }
+            
+            // Desabilita o input e botão rapidamente para evitar respostas múltiplas
+            respostaInput.disabled = true;
+            document.getElementById("btnResponder").disabled = true;
+
+
+            if(resposta === numero1*numero2){
+                pontos++;
+                mensagem.style.color="var(--success-color)";
+                mensagem.innerText="✅ Acertou!";
+            } else {
+                erros++;
+                mensagem.style.color="var(--error-color)";
+                mensagem.innerText=`❌ Errou! A resposta correta era ${numero1*numero2}`;
+            }
+            document.getElementById("pontos").innerText=pontos;
+            
+            // Próxima pergunta após a leitura da resposta
+            setTimeout(novaPergunta, 800); 
+        }
+
+        function iniciarTimer() {
+            intervalo = setInterval(()=>{
+                tempo--;
+                document.getElementById("timer").innerText=`⏳ Tempo: ${tempo}s`;
+                if(tempo<=0){ 
+                    clearInterval(intervalo); 
+                    finalizar(); 
+                }
+            },1000);
+        }
+
+        function iniciarJogo(){
+            tempo = parseInt(document.getElementById("tempoSelecionado").value);
+            document.getElementById("config").style.display="none";
+            document.getElementById("jogo").style.display="block";
+            document.getElementById("welcome-message").style.display="none"; 
+            document.getElementById("timer").innerText=`⏳ Tempo: ${tempo}s`;
+            novaPergunta();
+            iniciarTimer();
+        }
+        
+        function reiniciarPontos() {
+             pontos = 0;
+             erros = 0;
+             document.getElementById("pontos").innerText = "0";
+             document.getElementById("graficoFinal").style.display = "none";
+             document.getElementById("jogo").style.display = "block";
+             document.getElementById("resposta").disabled = false;
+             document.getElementById("btnResponder").disabled = false;
+             document.getElementById("mensagem").innerText = "";
+             if (meuGrafico) meuGrafico.destroy();
+             iniciarJogo();
+        }
+
+        function finalizar(){
+            document.getElementById("pergunta").innerText="🏁 Fim do jogo!";
+            document.getElementById("resposta").disabled=true;
+            document.getElementById("btnResponder").disabled=true;
+            document.getElementById("graficoFinal").style.display="block";
+            document.getElementById("mensagem").innerText=`🎉 Resultado: ${pontos} Acertos e ${erros} Erros.`;
+            document.getElementById("mensagem").style.color="var(--accent-color)";
+
+            const ctx=document.getElementById("meuGrafico").getContext("2d");
+            
+            if (meuGrafico) {
+                meuGrafico.destroy();
+            }
+
+            meuGrafico = new Chart(ctx,{
+                type:"bar",
+                data:{ 
+                    labels:["Acertos","Erros"], 
+                    datasets:[{
+                        label:"Resultado do Jogo", 
+                        data:[pontos,erros], 
+                        backgroundColor:["var(--success-color)","#f44336"], // Usa a variável do CSS
+                        borderRadius: 5
+                    }] 
+                },
+                options:{ 
+                    responsive:true, 
+                    plugins:{
+                        legend:{display:false},
+                        tooltip: {
+                             backgroundColor: 'rgba(0,0,0,0.8)',
+                             titleFont: { size: 16 },
+                             bodyFont: { size: 14 }
+                        }
+                    }, 
+                    scales:{
+                        y:{
+                            beginAtZero:true,
+                            ticks:{stepSize:1, color: 'white'},
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x:{
+                            ticks:{ color: 'white'},
+                            grid: { display: false }
+                        }
+                    } 
+                }
+            });
+        }
+    </script>
+</body>
+</html>
