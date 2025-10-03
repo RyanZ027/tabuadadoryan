@@ -57,6 +57,13 @@ h1 {
     color: var(--accent-color);
     margin-bottom: 25px;
 }
+h2 {
+    font-weight: 400;
+    color: var(--text-color);
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
 
 input, select {
     width: calc(100% - 20px);
@@ -117,7 +124,28 @@ button:active {
     margin-top: 15px;
 }
 
-/* Estilos específicos para o Jogo */
+/* --- Estilos do Jogo --- */
+/* Configuração */
+.config-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    margin-bottom: 5px;
+}
+.config-section label {
+    font-weight: 400;
+    text-align: left;
+    flex: 1;
+}
+.config-section select {
+    flex: 2;
+    width: auto;
+    margin: 0;
+    padding: 8px;
+    text-align: center;
+}
+
 #timer { 
     font-size: 24px; 
     font-weight: 700; 
@@ -128,12 +156,13 @@ button:active {
     font-size: 32px;
     font-weight: 700;
     margin: 20px 0;
+    min-height: 40px;
 }
 #resposta {
     font-size: 24px;
     text-align: center;
     font-weight: 600;
-    width: 60%; /* Campo de resposta menor */
+    width: 60%; 
     margin-top: 20px;
     margin-bottom: 20px;
 }
@@ -145,21 +174,24 @@ button:active {
     font-size: 16px;
     font-weight: 600;
     padding: 10px 0;
-    min-height: 40px; /* Evita que a interface "pule" */
+    min-height: 40px; 
 }
-#btnResponder {
-    margin-top: 10px;
+
+/* Botões do Rodapé (Histórico e Sair) */
+.bottom-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
 }
-#graficoFinal {
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+.bottom-buttons button {
+    flex: 1;
+    margin: 0;
 }
 
 /* Botão Sair/Logout específico */
 .btn-logout {
     background-color: var(--error-color) !important;
-    margin-top: 20px !important;
 }
 .btn-logout:hover {
     background-color: #d32f2f !important;
@@ -176,5 +208,15 @@ button:active {
     }
     #resposta {
         width: 80%;
+    }
+    .config-section {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .config-section label {
+        margin-bottom: 5px;
+    }
+    .config-section select {
+        width: 100%;
     }
 }
